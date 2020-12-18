@@ -3,9 +3,9 @@ require("dotenv").config();
 const fetch = require("node-fetch");
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 exports.handler = function (event, context, callback) {
-  const date = new Date().toISOString()
+  const date = new Date().toISOString();
 
-  console.log(date)
+  console.log(date);
   const accessSpreadSheet = async ({
     productName,
     topic,
@@ -80,7 +80,6 @@ exports.handler = function (event, context, callback) {
             `,
   };
 
-  
   fetch("https://api.producthunt.com/v2/api/graphql", {
     method: "POST",
     headers: {
@@ -89,10 +88,17 @@ exports.handler = function (event, context, callback) {
     },
     body: JSON.stringify(requestBody),
   })
-    .then((res) => {if(res.statusCode !== 200) {
-      throw new Error("Server Error")
-    } else res.json()
-  })
+    .then((res) => {
+      if (res.statusCode !== 200) {
+        callback(null, {
+          statusCode: 200,
+          body: JSON.stringify({
+            message: "Product Hunt sever error",
+            err: res.data,
+          }),
+        });
+      } else res.json();
+    })
     .then(async ({ data, status }) => {
       if (data) {
         const filterData = data.posts.edges.filter((el) => {
@@ -123,11 +129,13 @@ exports.handler = function (event, context, callback) {
         }
       }
     })
-    .catch((err) => callback(null, {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "err",
-        err
-      }),
-    }));
+    .catch((err) =>
+      callback(null, {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: "err",
+          err,
+        }),
+      })
+    );
 };
