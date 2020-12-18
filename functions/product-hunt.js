@@ -1,11 +1,10 @@
 require("dotenv").config();
 
-const fetch = require("node-fetch");
+const axios = require('axios');
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 exports.handler = function (event, context, callback) {
   const date = new Date().toISOString();
 
-  console.log(date);
   const accessSpreadSheet = async ({
     productName,
     topic,
@@ -46,96 +45,63 @@ exports.handler = function (event, context, callback) {
 
     await sheet.addRow(row);
   };
-  const requestBody = {
-    query: `
-        {
-            posts(order:RANKING,  postedBefore: ${date}) {
-            
-              edges {
-                node {
-                  name
-                  url
-                  topics {
-                    edges {
-                      node {
-                         name
-                      }
-                    }
-                  }
-                  votesCount
-                  media {
-                    videoUrl
-                    url
-                  }
-                  tagline
-                
-                  createdAt
-                
-                  
-                }
-              }
-              
-            }
-          }
-            `,
-  };
-
-  fetch("https://api.producthunt.com/v2/api/graphql", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${process.env.PH_ACCESS_TOKEN}`,
-      "Content-type": "Application/JSON",
+ 
+  var data = JSON.stringify({
+    query: ` {posts(order:RANKING,  postedBefore: "${date}") {\n            \n              edges {\n                node {\n                  name\n                  url\n                  topics {\n                    edges {\n                      node {\n                         name\n							}\n						}\n					}\n                  votesCount\n                  media {\n                    videoUrl\n                    url\n					}\n                  tagline\n                \n                  createdAt\n				}\n			}\n		}\n	}`,
+    variables: {}
+  });
+  
+  var config = {
+    method: 'POST',
+    url: 'https://api.producthunt.com/v2/api/graphql',
+    headers: { 
+      'Authorization': `Bearer ${process.env.PH_ACCESS_TOKEN}`,
+      'Content-type': 'Application/JSON', 
     },
-    body: JSON.stringify(requestBody),
-  })
-    .then((res) => {
-      if (res.statusCode !== 200) {
-        callback(null, {
-          statusCode: 200,
-          body: JSON.stringify({
-            message: "Product Hunt sever error :(",
-            err: res.data,
-          }),
+    data : data
+  };
+  
+  axios(config)
+  .then(async (res) => { 
+      const filterData = res.data.data.posts.edges.filter((el) => {
+        return el.node.media.map((el) => el.videoUrl)[0] !== null;
+      });
+     
+      
+      for (let index = 0; index < filterData.length; index++) {
+        const product = filterData[index];
+        await accessSpreadSheet({
+          productName: product.node.name,
+          topic: product.node.topics.edges
+            .map(({ node }) => node.name)
+            .toString(),
+          votesCount: product.node.votesCount,
+          videoUrl: product.node.media[0].videoUrl,
+          featuredImage: product.node.media[1].url,
+          url: product.node.url,
+          created_at: product.node.createdAt,
+          description: product.node.tagline,
         });
-      } else res.json();
-    })
-    .then(async ({ data, status }) => {
-      if (data) {
-        const filterData = data.posts.edges.filter((el) => {
-          return el.node.media.map((el) => el.videoUrl)[0] !== null;
-        });
-
-        callback(null, {
-          statusCode: 200,
-          body: JSON.stringify({
-            message: "Success",
-            data: filterData.length,
-          }),
-        });
-        for (let index = 0; index < filterData.length; index++) {
-          const product = filterData[index];
-          await accessSpreadSheet({
-            productName: product.node.name,
-            topic: product.node.topics.edges
-              .map(({ node }) => node.name)
-              .toString(),
-            votesCount: product.node.votesCount,
-            videoUrl: product.node.media[0].videoUrl,
-            featuredImage: product.node.media[1].url,
-            url: product.node.url,
-            created_at: product.node.createdAt,
-            description: product.node.tagline,
-          });
-        }
       }
-    })
-    .catch((err) =>
       callback(null, {
         statusCode: 200,
         body: JSON.stringify({
-          message: "err",
-          err,
+          message: "Success",
+          data: res.data.data.posts.length,
         }),
-      })
-    );
+      });
+     
+ 
+  })
+  .catch((err) =>
+  callback(null, {
+    statusCode: 500,
+    body: JSON.stringify({
+      message: "err",
+      err: "PH error",
+    }),
+  })
+);
+ 
+  
 };
