@@ -93,7 +93,7 @@ exports.handler = function (event, context, callback) {
         callback(null, {
           statusCode: 200,
           body: JSON.stringify({
-            message: "Product Hunt sever error",
+            message: "Product Hunt sever error :(",
             err: res.data,
           }),
         });
