@@ -31,7 +31,7 @@ function Layout({ children }) {
             Made By Ilias 🇲🇦
           </a>
           <img
-            src="https://pbs.twimg.com/profile_images/1099405459235184640/oL_7pkfL_400x400.png"
+            src="https://pbs.twimg.com/profile_images/1323272518824767489/0Roq4rqd_400x400.jpg"
             className="block h-8 w-8 rounded-full"
           />
         </div>
