@@ -116,8 +116,7 @@ const IndexPage = ({ data }) => {
           .filter(
             ({ node }) =>
               node.productname.includes(query) ||
-              node.description.includes(query) ||
-              node.topic.includes(query)
+              node.description.includes(query)
           )
 
           .sort((a, b) => b.votescount - a.votescount)
@@ -137,7 +136,7 @@ const IndexPage = ({ data }) => {
               </div>
               <div className="mt-4 md:mt-3 ">
                 <div className="uppercase tracking-wide text-sm text-indigo-600 font-bold">
-                  {node.topic.split(",")[0]}
+                  {node.topic && node.topic.split(",")[0]}
                 </div>
                 <a
                   href={node.url}
