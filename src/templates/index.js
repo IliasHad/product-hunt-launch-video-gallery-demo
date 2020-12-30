@@ -129,7 +129,7 @@ const IndexPage = ({ data, pageContext }) => {
               </div>
               <div className="mt-4 md:mt-3 ">
                 <div className="uppercase tracking-wide text-sm text-indigo-600 font-bold">
-                  {node.topic.split(",")[0]}
+                  {node.topic && node.topic.split(",")[0]}
                 </div>
                 <a
                   href={node.url}
