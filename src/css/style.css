@@ -6,6 +6,9 @@
 
 .modal.is-active {
   display: flex;
+  
+    z-index: 1000;
+
 }
 .modal {
   display: none;
